@@ -20,7 +20,6 @@ interface Settings {
   cameraIconFit: "contain" | "cover" | "fill";
   flashlightIconSize: number;
   cameraIconSize: number;
-  pinchResizeEnabled: boolean;
 }
 
 interface ElementPositions {
@@ -577,40 +576,6 @@ function SettingsPanel({
               </select>
             </div>
           )}
-          {settings.flashlightVisible && (
-            <div style={{ paddingTop: 4 }}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: 6,
-                }}
-              >
-                <div style={subLabelStyle}>Button size</div>
-                <div
-                  style={{ ...subLabelStyle, color: "rgba(255,255,255,0.7)" }}
-                >
-                  {settings.flashlightIconSize}px
-                </div>
-              </div>
-              <input
-                data-ocid="settings.flashlight.size_input"
-                type="range"
-                min={40}
-                max={140}
-                value={settings.flashlightIconSize}
-                onChange={(e) =>
-                  onUpdate({ flashlightIconSize: Number(e.target.value) })
-                }
-                style={{
-                  width: "100%",
-                  accentColor: "white",
-                  cursor: "pointer",
-                }}
-              />
-            </div>
-          )}
           <input
             ref={flashIconRef}
             type="file"
@@ -755,61 +720,12 @@ function SettingsPanel({
               </select>
             </div>
           )}
-          {settings.cameraVisible && (
-            <div style={{ paddingTop: 4 }}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: 6,
-                }}
-              >
-                <div style={subLabelStyle}>Button size</div>
-                <div
-                  style={{ ...subLabelStyle, color: "rgba(255,255,255,0.7)" }}
-                >
-                  {settings.cameraIconSize}px
-                </div>
-              </div>
-              <input
-                data-ocid="settings.camera.size_input"
-                type="range"
-                min={40}
-                max={140}
-                value={settings.cameraIconSize}
-                onChange={(e) =>
-                  onUpdate({ cameraIconSize: Number(e.target.value) })
-                }
-                style={{
-                  width: "100%",
-                  accentColor: "white",
-                  cursor: "pointer",
-                }}
-              />
-            </div>
-          )}
           <input
             ref={cameraIconRef}
             type="file"
             accept="image/*"
             style={{ display: "none" }}
             onChange={handleCameraIconChange}
-          />
-        </div>
-
-        {/* Pinch to Resize */}
-        <div style={rowStyle}>
-          <div>
-            <div style={labelStyle}>Pinch to Resize Icons</div>
-            <div style={subLabelStyle}>Pinch icons to change their size</div>
-          </div>
-          <Toggle
-            checked={settings.pinchResizeEnabled}
-            onChange={() =>
-              onUpdate({ pinchResizeEnabled: !settings.pinchResizeEnabled })
-            }
-            data-ocid="settings.pinch_resize.toggle"
           />
         </div>
 
@@ -1038,7 +954,6 @@ export default function App() {
     cameraIconFit: "contain",
     flashlightIconSize: 72,
     cameraIconSize: 72,
-    pinchResizeEnabled: true,
   });
 
   // RAF-loop refs
@@ -1220,7 +1135,7 @@ export default function App() {
     const map = flashlightPointersRef.current;
     map.set(e.pointerId, { x: e.clientX, y: e.clientY });
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    if (map.size === 2 && settingsRef.current.pinchResizeEnabled) {
+    if (map.size === 2) {
       const pts = Array.from(map.values());
       const dx = pts[0].x - pts[1].x;
       const dy = pts[0].y - pts[1].y;
@@ -1304,7 +1219,7 @@ export default function App() {
     const map = cameraPointersRef.current;
     map.set(e.pointerId, { x: e.clientX, y: e.clientY });
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    if (map.size === 2 && settingsRef.current.pinchResizeEnabled) {
+    if (map.size === 2) {
       const pts = Array.from(map.values());
       const dx = pts[0].x - pts[1].x;
       const dy = pts[0].y - pts[1].y;
@@ -1683,12 +1598,19 @@ export default function App() {
               ...btnStyle,
               width: settings.flashlightIconSize,
               height: settings.flashlightIconSize,
-              position: "absolute" as const,
-              left: `${flashPos.x}%`,
-              top: `${flashPos.y}%`,
               ...(isEditMode
-                ? getDragStyle("flashlight")
-                : { transform: "translate(-50%,-50%)" }),
+                ? {
+                    position: "absolute" as const,
+                    left: `${flashPos.x}%`,
+                    top: `${flashPos.y}%`,
+                    ...getDragStyle("flashlight"),
+                  }
+                : {
+                    position: "fixed" as const,
+                    left: "24px",
+                    bottom: "18px",
+                    transform: "none",
+                  }),
               zIndex: 10,
               cursor: isEditMode
                 ? dragTarget === "flashlight"
@@ -1819,12 +1741,19 @@ export default function App() {
               ...btnStyle,
               width: settings.cameraIconSize,
               height: settings.cameraIconSize,
-              position: "absolute" as const,
-              left: `${cameraPos.x}%`,
-              top: `${cameraPos.y}%`,
               ...(isEditMode
-                ? getDragStyle("camera")
-                : { transform: "translate(-50%,-50%)" }),
+                ? {
+                    position: "absolute" as const,
+                    left: `${cameraPos.x}%`,
+                    top: `${cameraPos.y}%`,
+                    ...getDragStyle("camera"),
+                  }
+                : {
+                    position: "fixed" as const,
+                    right: "24px",
+                    bottom: "18px",
+                    transform: "none",
+                  }),
               zIndex: 10,
               cursor: isEditMode
                 ? dragTarget === "camera"
